@@ -1,28 +1,62 @@
 #!/usr/bin/env ruby
 
 module D4
-  def self.parse(input)
+  def self.parse(input, seek)
     y = 0
 
     map = {}
-    xs = []
+    locs = []
 
     input.lines.each do |line|
       x = 0
       line.chomp.chars.each do |c|
         loc = [x, y]
         map[loc] = c
-        xs << loc if c == 'X'
+        locs << loc if c == seek
         x += 1
       end
       y += 1
     end
 
-    [map, xs]
+    [map, locs]
+  end
+
+  def self.p2(input)
+    map, ms = parse(input, 'M')
+
+    # A map each from 'A' in a 'MAS' to an array of the 'M' locations that
+    # started it.
+    as = {}
+
+    ms.each do |loc|
+      cross(loc).select do |vs|
+        name = vs.map do |v|
+          map[v]
+        end.join
+
+        name == "MAS"
+      end.each do |path|
+        as[path[1]] ||= []
+        as[path[1]] << path.first
+      end
+    end
+
+    as.values.count do |v|
+      v.size > 1
+    end
+  end
+
+  def self.cross(loc)
+    [
+      vector(loc, 2, [1, -1]),
+      vector(loc, 2, [1, 1]),
+      vector(loc, 2, [-1, -1]),
+      vector(loc, 2, [-1, 1]),
+    ]
   end
 
   def self.p1(input)
-    map, xs = parse(input)
+    map, xs = parse(input, 'X')
 
     xs.sum do |loc|
       dirs(loc).count do |vs|
